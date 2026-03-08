@@ -1,0 +1,111 @@
+import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import { db } from "@/lib/firebase-admin"
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
+
+    // @ts-ignore
+    const userId = session.user.id
+    const { rideId, endStationId } = await req.json()
+
+    if (!rideId || !endStationId) {
+      return NextResponse.json({ message: "Ride ID and End Station ID are required" }, { status: 400 })
+    }
+
+    // Fetch the active ride
+    const rideRef = db.collection("rides").doc(rideId)
+    const rideDoc = await rideRef.get()
+
+    if (!rideDoc.exists) {
+      return NextResponse.json({ message: "Active ride not found" }, { status: 404 })
+    }
+
+    const ride = rideDoc.data()!
+
+    if (ride.userId !== userId || ride.status !== "ACTIVE") {
+      return NextResponse.json({ message: "Active ride not found" }, { status: 404 })
+    }
+
+    // Verify the end station exists
+    const endStationDoc = await db.collection("stations").doc(endStationId).get()
+    if (!endStationDoc.exists) {
+      return NextResponse.json({ message: "Invalid Drop-off Station" }, { status: 400 })
+    }
+
+    const endTime = new Date()
+    const startTime = new Date(ride.startTime)
+    const durationMs = endTime.getTime() - startTime.getTime()
+    const durationMinutes = Math.ceil(durationMs / (1000 * 60))
+
+    // Base pricing
+    let cost = 0
+    if (ride.planDuration === 5) cost = 20
+    else if (ride.planDuration === 10) cost = 30
+    else if (ride.planDuration === 15) cost = 40
+    else cost = 20
+
+    // Extra charges beyond plan
+    if (durationMinutes > ride.planDuration) {
+      const extraMinutes = durationMinutes - ride.planDuration
+      cost += (extraMinutes * 5)
+    }
+
+    // Check for active pass to override pricing
+    const now = new Date()
+    const passSnap = await db.collection("passes")
+      .where("userId", "==", userId)
+      .where("expiresAt", ">", now.toISOString())
+      .limit(1).get()
+
+    if (!passSnap.empty) {
+      if (durationMinutes <= ride.planDuration) {
+        cost = 0 // Fully covered
+      } else {
+        const extraMinutes = durationMinutes - ride.planDuration
+        cost = extraMinutes * 5 // Only pay overtime
+      }
+    }
+
+    // Update ride status to COMPLETED
+    await rideRef.update({
+      endTime: endTime.toISOString(),
+      endStationId,
+      status: "COMPLETED",
+      cost,
+    })
+
+    // Move the bike to end station and mark it AVAILABLE
+    const endStationData = endStationDoc.data()!
+    const endBikes: any[] = endStationData.bikes || []
+    endBikes.push({ id: ride.bikeId, status: "AVAILABLE", battery: 80 })
+    await db.collection("stations").doc(endStationId).update({ bikes: endBikes })
+
+    // Remove from starting station bikes array
+    const startStationRef = db.collection("stations").doc(ride.startStationId)
+    const startStationDoc = await startStationRef.get()
+    if (startStationDoc.exists) {
+      const startBikes: any[] = startStationDoc.data()!.bikes || []
+      const filtered = startBikes.filter((b: any) => b.id !== ride.bikeId)
+      await startStationRef.update({ bikes: filtered })
+    }
+
+    return NextResponse.json(
+      { 
+        message: "Ride ended successfully", 
+        durationMinutes,
+        cost,
+        receipt: `Ride duration: ${durationMinutes} minutes. Total Cost: ₹${cost}`
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("Error ending ride:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
+}
