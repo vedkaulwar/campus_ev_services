@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -54,61 +54,69 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card glass">
-        <div className="auth-logo">
-          ⚡ CampusEV
-        </div>
-        <div className="auth-subtitle">Welcome back! Sign in to continue</div>
-
-        {error && (
-          <div style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {error}
-          </div>
-        )}
-        
-        {successMsg && (
-          <div style={{ color: 'var(--success)', marginBottom: '1rem', fontSize: '0.875rem' }}>
-            {successMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              required 
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="student@mituniversity.edu.in" 
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              required 
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••" 
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          Don&apos;t have an account? <Link href="/signup">Sign up here</Link>
-        </div>
+    <div className="auth-card glass">
+      <div className="auth-logo">
+        ⚡ CampusEV
       </div>
+      <div className="auth-subtitle">Welcome back! Sign in to continue</div>
+
+      {error && (
+        <div style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          {error}
+        </div>
+      )}
+      
+      {successMsg && (
+        <div style={{ color: 'var(--success)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          {successMsg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="student@mituniversity.edu.in" 
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="••••••••" 
+          />
+        </div>
+
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? "Signing in..." : "Sign In"}
+        </button>
+      </form>
+
+      <div className="auth-footer">
+        Don&apos;t have an account? <Link href="/signup">Sign up here</Link>
+      </div>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <div className="auth-container">
+      <Suspense fallback={<div className="glass" style={{ padding: '2rem' }}>Loading...</div>}>
+        <LoginForm />
+      </Suspense>
     </div>
   )
 }

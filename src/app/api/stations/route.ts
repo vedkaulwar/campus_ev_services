@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const stationsSnap = await db.collection("stations").orderBy("name").get()
 
-    const stations = stationsSnap.docs.map(doc => {
+    const stations = stationsSnap.docs.map((doc: any) => {
       const data = doc.data()
       const availableBikes = (data.bikes || []).filter((b: any) => b.status === "AVAILABLE")
       return {
