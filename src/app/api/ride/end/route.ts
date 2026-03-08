@@ -81,18 +81,39 @@ export async function POST(req: Request) {
     })
 
     // Move the bike to end station and mark it AVAILABLE
-    const endStationData = endStationDoc.data()!
-    const endBikes: any[] = endStationData.bikes || []
-    endBikes.push({ id: ride.bikeId, status: "AVAILABLE", battery: 80 })
-    await db.collection("stations").doc(endStationId).update({ bikes: endBikes })
+    // Handling case where start and end stations are the same
+    if (ride.startStationId === endStationId) {
+      const stationRef = db.collection("stations").doc(endStationId)
+      const stationDoc = await stationRef.get()
+      if (stationDoc.exists) {
+        let bikes: any[] = stationDoc.data()!.bikes || []
+        // Find and update the specific bike
+        const bikeIdx = bikes.findIndex(b => b.id === ride.bikeId)
+        if (bikeIdx !== -1) {
+          bikes[bikeIdx].status = "AVAILABLE"
+        } else {
+          // Fallback: if bike somehow went missing from array, add it back
+          bikes.push({ id: ride.bikeId, status: "AVAILABLE", battery: 80 })
+        }
+        await stationRef.update({ bikes })
+      }
+    } else {
+      // Different stations: Remove from start, Add to end
+      // 1. Add to end station
+      const endStationRef = db.collection("stations").doc(endStationId)
+      const endStationData = (await endStationRef.get()).data()!
+      const endBikes: any[] = endStationData.bikes || []
+      endBikes.push({ id: ride.bikeId, status: "AVAILABLE", battery: 80 })
+      await endStationRef.update({ bikes: endBikes })
 
-    // Remove from starting station bikes array
-    const startStationRef = db.collection("stations").doc(ride.startStationId)
-    const startStationDoc = await startStationRef.get()
-    if (startStationDoc.exists) {
-      const startBikes: any[] = startStationDoc.data()!.bikes || []
-      const filtered = startBikes.filter((b: any) => b.id !== ride.bikeId)
-      await startStationRef.update({ bikes: filtered })
+      // 2. Remove from start station
+      const startStationRef = db.collection("stations").doc(ride.startStationId)
+      const startStationDoc = await startStationRef.get()
+      if (startStationDoc.exists) {
+        const startBikes: any[] = startStationDoc.data()!.bikes || []
+        const filtered = startBikes.filter((b: any) => b.id !== ride.bikeId)
+        await startStationRef.update({ bikes: filtered })
+      }
     }
 
     return NextResponse.json(
