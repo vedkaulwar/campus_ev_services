@@ -33,6 +33,7 @@ const stations = [
     bikes: [
       { id: "bike-ft-1", status: "AVAILABLE", battery: 90 },
       { id: "bike-ft-2", status: "AVAILABLE", battery: 75 },
+      { id: "bike-ft-3", status: "AVAILABLE", battery: 88 },
     ]
   },
   {
@@ -52,6 +53,7 @@ const stations = [
     bikes: [
       { id: "bike-iod-1", status: "AVAILABLE", battery: 88 },
       { id: "bike-iod-2", status: "AVAILABLE", battery: 72 },
+      { id: "bike-iod-3", status: "AVAILABLE", battery: 95 },
     ]
   },
   {
@@ -61,6 +63,7 @@ const stations = [
     bikes: [
       { id: "bike-rm-1", status: "AVAILABLE", battery: 95 },
       { id: "bike-rm-2", status: "AVAILABLE", battery: 83 },
+      { id: "bike-rm-3", status: "AVAILABLE", battery: 78 },
     ]
   },
   {
