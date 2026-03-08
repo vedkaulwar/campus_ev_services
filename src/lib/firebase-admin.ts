@@ -7,17 +7,16 @@ const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n")
 if (!admin.apps.length) {
   if (!projectId || !clientEmail || !privateKey) {
     console.warn(
-      "⚠️  Firebase Admin: Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY env vars. " +
-      "API routes requiring Firestore will fail at runtime. " +
-      "Please add these variables in your Vercel dashboard."
+      "⚠️  Firebase Admin: Missing FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, or NEXT_PUBLIC_FIREBASE_PROJECT_ID env vars. " +
+      "API routes requiring Firestore will fail at runtime until these are added in your Vercel dashboard."
     )
   } else {
     try {
       admin.initializeApp({
         credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey,
+          projectId: projectId,
+          clientEmail: clientEmail,
+          privateKey: privateKey,
         }),
       })
       console.log("✅ Firebase Admin initialized")
