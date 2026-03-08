@@ -37,15 +37,22 @@ export default function Home() {
   }, [status, router])
 
   useEffect(() => {
-    const fetchStationsAndPass = async () => {
+    const fetchInitialData = async () => {
       try {
-        const [stationsRes, passRes] = await Promise.all([
+        const [stationsRes, passRes, rideRes] = await Promise.all([
           fetch("/api/stations"),
-          fetch("/api/passes/active")
+          fetch("/api/passes/active"),
+          fetch("/api/ride/active")
         ])
         const stationsData = await stationsRes.json()
         const passData = await passRes.json()
+        const rideData = await rideRes.json()
         
+        if (rideData.hasActiveRide) {
+          router.push("/ride")
+          return
+        }
+
         setStations(stationsData)
         setHasPass(passData.hasPass)
       } catch (error) {
@@ -56,9 +63,9 @@ export default function Home() {
     }
 
     if (status === "authenticated") {
-      fetchStationsAndPass()
+      fetchInitialData()
     }
-  }, [status])
+  }, [status, router])
 
   const initiateRideClick = (station: Station) => {
     if (hasPass) {

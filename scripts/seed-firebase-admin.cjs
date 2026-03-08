@@ -82,11 +82,25 @@ async function seed() {
   console.log("🌱 Seeding Firebase Firestore with campus stations...\n")
 
   // Clear existing stations
-  const snap = await db.collection("stations").get()
-  for (const doc of snap.docs) {
+  const stationsSnap = await db.collection("stations").get()
+  for (const doc of stationsSnap.docs) {
     await doc.ref.delete()
   }
-  console.log(`✅ Cleared ${snap.size} existing station(s)\n`)
+  console.log(`✅ Cleared ${stationsSnap.size} existing station(s)`)
+
+  // Clear existing rides (prevent stale "active ride" blocks)
+  const ridesSnap = await db.collection("rides").get()
+  for (const doc of ridesSnap.docs) {
+    await doc.ref.delete()
+  }
+  console.log(`✅ Cleared ${ridesSnap.size} existing ride(s)`)
+
+  // Clear existing passes (optional, but good for a full reset)
+  const passesSnap = await db.collection("passes").get()
+  for (const doc of passesSnap.docs) {
+    await doc.ref.delete()
+  }
+  console.log(`✅ Cleared ${passesSnap.size} existing pass(es)\n`)
 
   // Add all stations
   for (const station of stations) {
