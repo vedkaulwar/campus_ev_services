@@ -25,7 +25,7 @@ export default function RidePage() {
 
   const fetchRideStatus = async () => {
     try {
-      const res = await fetch("/api/ride/active")
+      const res = await fetch(`/api/ride/active?t=${Date.now()}`)
       const data = await res.json()
       
       if (data.hasActiveRide) {
@@ -45,7 +45,7 @@ export default function RidePage() {
 
   const fetchAllStations = async () => {
     try {
-      const res = await fetch("/api/stations")
+      const res = await fetch(`/api/stations?t=${Date.now()}`)
       const data = await res.json()
       setStations(data)
     } catch (error) {

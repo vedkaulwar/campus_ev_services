@@ -39,10 +39,11 @@ export default function Home() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        const timestamp = Date.now()
         const [stationsRes, passRes, rideRes] = await Promise.all([
-          fetch("/api/stations"),
-          fetch("/api/passes/active"),
-          fetch("/api/ride/active")
+          fetch(`/api/stations?t=${timestamp}`),
+          fetch(`/api/passes/active?t=${timestamp}`),
+          fetch(`/api/ride/active?t=${timestamp}`)
         ])
         const stationsData = await stationsRes.json()
         const passData = await passRes.json()
