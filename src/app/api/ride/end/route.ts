@@ -57,13 +57,14 @@ export async function POST(req: Request) {
     }
 
     // Check for active pass to override pricing
-    const now = new Date()
+    const nowISO = new Date().toISOString()
     const passSnap = await db.collection("passes")
       .where("userId", "==", userId)
-      .where("expiresAt", ">", now.toISOString())
-      .limit(1).get()
+      .get()
 
-    if (!passSnap.empty) {
+    const hasActivePass = passSnap.docs.some((doc: any) => doc.data().expiresAt > nowISO)
+
+    if (hasActivePass) {
       if (durationMinutes <= ride.planDuration) {
         cost = 0 // Fully covered
       } else {

@@ -31,13 +31,14 @@ export async function GET() {
     const stationDoc = await db.collection("stations").doc(ride.startStationId).get()
     const startStation = stationDoc.exists ? stationDoc.data()!.name : "Unknown"
 
-    // Check for active pass
-    const now = new Date()
+    // Check for active pass without composite index
+    const nowISO = new Date().toISOString()
     const passSnap = await db.collection("passes")
       .where("userId", "==", userId)
-      .where("expiresAt", ">", now.toISOString())
-      .limit(1).get()
-    const hasPass = !passSnap.empty
+      .get()
+    
+    const activePass = passSnap.docs.find((doc: any) => doc.data().expiresAt > nowISO)
+    const hasPass = !!activePass
 
     if (ride.status === "PENDING") {
       return NextResponse.json({

@@ -17,11 +17,13 @@ export async function GET(req: Request) {
 
     const passSnap = await db.collection("passes")
       .where("userId", "==", userId)
-      .where("expiresAt", ">", now.toISOString())
-      .limit(1).get()
+      .get()
 
-    if (!passSnap.empty) {
-      const pass = passSnap.docs[0].data()
+    const nowISO = new Date().toISOString()
+    const activePassDoc = passSnap.docs.find((doc: any) => doc.data().expiresAt > nowISO)
+
+    if (activePassDoc) {
+      const pass = activePassDoc.data()
       return NextResponse.json({ hasPass: true, passType: pass.type }, { status: 200 })
     }
 

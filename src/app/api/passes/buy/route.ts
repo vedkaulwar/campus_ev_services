@@ -21,12 +21,14 @@ export async function POST(req: Request) {
 
     // Check if user already has an active pass
     const now = new Date()
+    const nowISO = now.toISOString()
     const passSnap = await db.collection("passes")
       .where("userId", "==", userId)
-      .where("expiresAt", ">", now.toISOString())
-      .limit(1).get()
+      .get()
 
-    if (!passSnap.empty) {
+    const hasActivePass = passSnap.docs.some((doc: any) => doc.data().expiresAt > nowISO)
+
+    if (hasActivePass) {
       return NextResponse.json({ message: "You already have an active pass!" }, { status: 400 })
     }
 
