@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-export const dynamic = 'force-dynamic'
+export const revalidate = 15
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/firebase-admin"

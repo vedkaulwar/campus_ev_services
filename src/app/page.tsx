@@ -39,21 +39,16 @@ export default function Home() {
   }, [status, router])
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchCriticalData = async () => {
       try {
         const timestamp = Date.now()
-        const [stationsRes, passRes, rideRes, duesRes, pastRidesRes] = await Promise.all([
-          fetch(`/api/stations?t=${timestamp}`),
-          fetch(`/api/passes/active?t=${timestamp}`),
+        // Tier 1: Only fetch what's needed for routing and primary render
+        const [rideRes, stationsRes] = await Promise.all([
           fetch(`/api/ride/active?t=${timestamp}`),
-          fetch(`/api/ride/dues?t=${timestamp}`),
-          fetch(`/api/ride/past?t=${timestamp}`)
+          fetch(`/api/stations?t=${timestamp}`)
         ])
-        const stationsData = await stationsRes.json()
-        const passData = await passRes.json()
+        
         const rideData = await rideRes.json()
-        const duesData = await duesRes.json()
-        const pastRidesData = await pastRidesRes.json()
         
         if (rideData.hasActiveRide) {
           if (rideData.status === "AWAITING_PAYMENT") {
@@ -64,19 +59,43 @@ export default function Home() {
           return
         }
 
+        const stationsData = await stationsRes.json()
         setStations(stationsData)
-        setHasPass(passData.hasPass)
-        if (duesData.totalDues) setTotalDues(duesData.totalDues)
-        if (pastRidesData.pastRides) setPastRides(pastRidesData.pastRides)
+        
+        // Unblock the UI now that essential data is loaded
+        setLoading(false)
+
+        // Tier 2: Fetch secondary data silently in the background
+        fetchSecondaryData(timestamp)
+
       } catch (error) {
         console.error("Failed to fetch initial data:", error)
-      } finally {
         setLoading(false)
       }
     }
 
+    const fetchSecondaryData = async (timestamp: number) => {
+      try {
+        const [passRes, duesRes, pastRidesRes] = await Promise.all([
+          fetch(`/api/passes/active?t=${timestamp}`),
+          fetch(`/api/ride/dues?t=${timestamp}`),
+          fetch(`/api/ride/past?t=${timestamp}`)
+        ])
+        
+        const passData = await passRes.json()
+        const duesData = await duesRes.json()
+        const pastRidesData = await pastRidesRes.json()
+
+        setHasPass(passData.hasPass)
+        if (duesData.totalDues) setTotalDues(duesData.totalDues)
+        if (pastRidesData.pastRides) setPastRides(pastRidesData.pastRides)
+      } catch (error) {
+        console.error("Failed to fetch secondary data:", error)
+      }
+    }
+
     if (status === "authenticated") {
-      fetchInitialData()
+      fetchCriticalData()
     }
   }, [status, router])
 
