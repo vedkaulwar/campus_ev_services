@@ -43,17 +43,13 @@ export async function POST(req: Request) {
     const durationMs = endTime.getTime() - startTime.getTime()
     const durationMinutes = Math.ceil(durationMs / (1000 * 60))
 
-    // Base pricing
-    let cost = 0
-    if (ride.planDuration === 5) cost = 20
-    else if (ride.planDuration === 10) cost = 30
-    else if (ride.planDuration === 15) cost = 40
-    else cost = 20
+    let extraFare = 0
+    let extraMinutes = 0
 
     // Extra charges beyond plan
     if (durationMinutes > ride.planDuration) {
-      const extraMinutes = durationMinutes - ride.planDuration
-      cost += (extraMinutes * 5)
+      extraMinutes = durationMinutes - ride.planDuration
+      extraFare = extraMinutes * 5
     }
 
     // Check for active pass to override pricing
@@ -66,19 +62,21 @@ export async function POST(req: Request) {
 
     if (hasActivePass) {
       if (durationMinutes <= ride.planDuration) {
-        cost = 0 // Fully covered
+        extraFare = 0 // Fully covered
       } else {
-        const extraMinutes = durationMinutes - ride.planDuration
-        cost = extraMinutes * 5 // Only pay overtime
+        extraMinutes = durationMinutes - ride.planDuration
+        extraFare = extraMinutes * 5 // Only pay overtime
       }
     }
 
-    // Update ride status to COMPLETED
+    const finalStatus = extraFare > 0 ? "COMPLETED_WITH_DUES" : "COMPLETED"
+
+    // Update ride status
     await rideRef.update({
       endTime: endTime.toISOString(),
       endStationId,
-      status: "COMPLETED",
-      cost,
+      status: finalStatus,
+      extraFare,
     })
 
     // Move the bike to end station and mark it AVAILABLE
@@ -121,8 +119,8 @@ export async function POST(req: Request) {
       { 
         message: "Ride ended successfully", 
         durationMinutes,
-        cost,
-        receipt: `Ride duration: ${durationMinutes} minutes. Total Cost: ₹${cost}`
+        extraFare,
+        receipt: `Ride duration: ${durationMinutes} minutes.` + (extraFare > 0 ? ` Extra Fare: ₹${extraFare}` : "")
       },
       { status: 200 }
     )

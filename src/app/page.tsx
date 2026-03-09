@@ -29,6 +29,8 @@ export default function Home() {
   const [planLoading, setPlanLoading] = useState(false)
   const [planError, setPlanError] = useState("")
   const [hasPass, setHasPass] = useState(false)
+  const [totalDues, setTotalDues] = useState(0)
+  const [pastRides, setPastRides] = useState<any[]>([])
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -40,22 +42,32 @@ export default function Home() {
     const fetchInitialData = async () => {
       try {
         const timestamp = Date.now()
-        const [stationsRes, passRes, rideRes] = await Promise.all([
+        const [stationsRes, passRes, rideRes, duesRes, pastRidesRes] = await Promise.all([
           fetch(`/api/stations?t=${timestamp}`),
           fetch(`/api/passes/active?t=${timestamp}`),
-          fetch(`/api/ride/active?t=${timestamp}`)
+          fetch(`/api/ride/active?t=${timestamp}`),
+          fetch(`/api/ride/dues?t=${timestamp}`),
+          fetch(`/api/ride/past?t=${timestamp}`)
         ])
         const stationsData = await stationsRes.json()
         const passData = await passRes.json()
         const rideData = await rideRes.json()
+        const duesData = await duesRes.json()
+        const pastRidesData = await pastRidesRes.json()
         
         if (rideData.hasActiveRide) {
-          router.push("/ride")
+          if (rideData.status === "AWAITING_PAYMENT") {
+            router.push(`/payment?rideId=${rideData.rideId}&baseCost=${rideData.baseCost}&pastDues=${rideData.pastDues}&totalCost=${rideData.totalCost}`)
+          } else {
+            router.push("/ride")
+          }
           return
         }
 
         setStations(stationsData)
         setHasPass(passData.hasPass)
+        if (duesData.totalDues) setTotalDues(duesData.totalDues)
+        if (pastRidesData.pastRides) setPastRides(pastRidesData.pastRides)
       } catch (error) {
         console.error("Failed to fetch initial data:", error)
       } finally {
@@ -98,8 +110,8 @@ export default function Home() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.message)
 
-      // Ride booked successfully, now redirect to the ride screen
-      router.push(`/ride`)
+      // Ride booked successfully, transition to Payment Checkout
+      router.push(`/payment?rideId=${data.rideId}&baseCost=${data.baseCost}&pastDues=${data.pastDues}&totalCost=${data.totalCost}`)
     } catch (err: any) {
       setPlanError(err.message)
       setPlanLoading(false)
@@ -196,6 +208,39 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Past Rides & Dues Section */}
+        {totalDues > 0 && (
+          <div style={{ padding: "1rem", background: "rgba(239, 68, 68, 0.1)", color: "var(--danger)", borderRadius: "0.75rem", marginBottom: "1.5rem", maxWidth: "1200px", margin: "0 auto", textAlign: "center", fontWeight: "bold" }}>
+             ⚠️ You have ₹{totalDues} in Unpaid Dues from previous rides. This will be added to your next booking.
+          </div>
+        )}
+        
+        <section style={{ padding: "2rem 5%", maxWidth: "1200px", margin: "0 auto" }}>
+          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>Past Rides</h2>
+          {pastRides.length === 0 ? (
+            <p style={{ color: "var(--text-muted)" }}>No past rides found.</p>
+          ) : (
+            <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+              {pastRides.map((ride: any) => (
+                <div key={ride.id} className="card glass" style={{ padding: "1.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                    <strong style={{ fontSize: "1.1rem" }}>{ride.startStation} → {ride.endStation}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontWeight: 600 }}>
+                    <span style={{ color: ride.extraFare > 0 && ride.status !== "COMPLETED_PAID" ? "var(--danger)" : "var(--success)" }}>
+                      {ride.status === "COMPLETED_WITH_DUES" ? `Unpaid Dues: ₹${ride.extraFare}` : "Paid"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
+                    Date: {new Date(ride.createdAt).toLocaleString()}<br/>
+                    Base Plan: {ride.planDuration} mins
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Plan Selection Modal */}

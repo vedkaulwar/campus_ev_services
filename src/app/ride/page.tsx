@@ -119,8 +119,8 @@ export default function RidePage() {
       
       if (!res.ok) throw new Error(data.message)
       
-      // Redirect to Payment
-      router.push(`/payment?rideId=${activeRide.rideId}&cost=${data.cost}&duration=${data.durationMinutes}`)
+      // Transition complete, returning to dashboard
+      router.push(`/`)
     } catch (err: any) {
       setError(err.message)
       setLoading(false)

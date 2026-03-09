@@ -20,10 +20,10 @@ export async function POST(req: Request) {
 
     const duration = planDuration ? parseInt(planDuration) : 5
 
-    // Check if user already has an active or pending ride
+    // Check if user already has an active or pending ride (or awaiting payment)
     const rideSnap = await db.collection("rides")
       .where("userId", "==", userId)
-      .where("status", "in", ["ACTIVE", "PENDING"])
+      .where("status", "in", ["AWAITING_PAYMENT", "ACTIVE", "PENDING"])
       .limit(1).get()
 
     if (!rideSnap.empty) {
@@ -51,13 +51,33 @@ export async function POST(req: Request) {
 
     const availableBike = bikes[availableBikeIndex]
 
-    // Create the ride in PENDING state
+    let baseCost = 20
+    if (duration === 10) baseCost = 30
+    else if (duration === 15) baseCost = 40
+
+    // Fetch past dues
+    const duesSnap = await db.collection("rides")
+      .where("userId", "==", userId)
+      .where("status", "==", "COMPLETED_WITH_DUES")
+      .get()
+      
+    let pastDues = 0
+    duesSnap.docs.forEach((doc: any) => {
+      pastDues += doc.data().extraFare || 0
+    })
+
+    const totalCost = baseCost + pastDues
+
+    // Create the ride in AWAITING_PAYMENT state
     const rideRef = await db.collection("rides").add({
       userId,
       bikeId: availableBike.id,
       startStationId,
       planDuration: duration,
-      status: "PENDING",
+      status: "AWAITING_PAYMENT",
+      baseCost,
+      pastDues,
+      totalCost,
       createdAt: new Date().toISOString(),
     })
 
@@ -66,7 +86,14 @@ export async function POST(req: Request) {
     await stationRef.update({ bikes })
 
     return NextResponse.json(
-      { message: "Bike reserved successfully", rideId: rideRef.id, planDuration: duration },
+      { 
+        message: "Bike reserved, awaiting payment", 
+        rideId: rideRef.id, 
+        planDuration: duration,
+        baseCost,
+        pastDues,
+        totalCost
+      },
       { status: 201 }
     )
   } catch (error) {

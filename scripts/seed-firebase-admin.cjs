@@ -24,6 +24,8 @@ const stations = [
       { id: "bike-mg-1", status: "AVAILABLE", battery: 95 },
       { id: "bike-mg-2", status: "AVAILABLE", battery: 80 },
       { id: "bike-mg-3", status: "AVAILABLE", battery: 70 },
+      { id: "bike-mg-4", status: "AVAILABLE", battery: 85 },
+      { id: "bike-mg-5", status: "AVAILABLE", battery: 92 },
     ]
   },
   {
@@ -34,6 +36,8 @@ const stations = [
       { id: "bike-ft-1", status: "AVAILABLE", battery: 90 },
       { id: "bike-ft-2", status: "AVAILABLE", battery: 75 },
       { id: "bike-ft-3", status: "AVAILABLE", battery: 88 },
+      { id: "bike-ft-4", status: "AVAILABLE", battery: 65 },
+      { id: "bike-ft-5", status: "AVAILABLE", battery: 98 },
     ]
   },
   {
@@ -44,6 +48,8 @@ const stations = [
       { id: "bike-it-1", status: "AVAILABLE", battery: 85 },
       { id: "bike-it-2", status: "AVAILABLE", battery: 60 },
       { id: "bike-it-3", status: "AVAILABLE", battery: 92 },
+      { id: "bike-it-4", status: "AVAILABLE", battery: 77 },
+      { id: "bike-it-5", status: "AVAILABLE", battery: 89 },
     ]
   },
   {
@@ -54,6 +60,8 @@ const stations = [
       { id: "bike-iod-1", status: "AVAILABLE", battery: 88 },
       { id: "bike-iod-2", status: "AVAILABLE", battery: 72 },
       { id: "bike-iod-3", status: "AVAILABLE", battery: 95 },
+      { id: "bike-iod-4", status: "AVAILABLE", battery: 68 },
+      { id: "bike-iod-5", status: "AVAILABLE", battery: 82 },
     ]
   },
   {
@@ -64,6 +72,8 @@ const stations = [
       { id: "bike-rm-1", status: "AVAILABLE", battery: 95 },
       { id: "bike-rm-2", status: "AVAILABLE", battery: 83 },
       { id: "bike-rm-3", status: "AVAILABLE", battery: 78 },
+      { id: "bike-rm-4", status: "AVAILABLE", battery: 91 },
+      { id: "bike-rm-5", status: "AVAILABLE", battery: 86 },
     ]
   },
   {
@@ -74,6 +84,8 @@ const stations = [
       { id: "bike-sc-1", status: "AVAILABLE", battery: 79 },
       { id: "bike-sc-2", status: "AVAILABLE", battery: 91 },
       { id: "bike-sc-3", status: "AVAILABLE", battery: 65 },
+      { id: "bike-sc-4", status: "AVAILABLE", battery: 84 },
+      { id: "bike-sc-5", status: "AVAILABLE", battery: 97 },
     ]
   }
 ]

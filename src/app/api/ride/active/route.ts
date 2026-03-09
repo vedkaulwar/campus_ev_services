@@ -14,10 +14,10 @@ export async function GET() {
     // @ts-ignore
     const userId = session.user.id
 
-    // Find active or pending ride
+    // Find active, pending, or unpaid rides
     const rideSnap = await db.collection("rides")
       .where("userId", "==", userId)
-      .where("status", "in", ["PENDING", "ACTIVE"])
+      .where("status", "in", ["AWAITING_PAYMENT", "PENDING", "ACTIVE"])
       .limit(1).get()
 
     if (rideSnap.empty) {
@@ -39,6 +39,20 @@ export async function GET() {
     
     const activePass = passSnap.docs.find((doc: any) => doc.data().expiresAt > nowISO)
     const hasPass = !!activePass
+
+    if (ride.status === "AWAITING_PAYMENT") {
+      return NextResponse.json({
+        hasActiveRide: true,
+        rideId: rideDoc.id,
+        status: "AWAITING_PAYMENT",
+        startStation,
+        planDuration: ride.planDuration,
+        baseCost: ride.baseCost || 0,
+        pastDues: ride.pastDues || 0,
+        totalCost: ride.totalCost || 0,
+        hasPass
+      }, { status: 200 })
+    }
 
     if (ride.status === "PENDING") {
       return NextResponse.json({
