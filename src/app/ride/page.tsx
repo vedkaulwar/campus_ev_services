@@ -162,7 +162,7 @@ export default function RidePage() {
         )}
 
         {activeRide.status === "PENDING" ? (
-          <div className="card glass" style={{ textAlign: "center", padding: "3rem 2rem" }}>
+          <div className="card glass" style={{ textAlign: "center", padding: "clamp(1.5rem, 5vw, 3rem) clamp(1rem, 4vw, 2rem)" }}>
             <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🔒</div>
             <h2 style={{ fontSize: "1.8rem", color: "var(--text-main)", marginBottom: "1rem" }}>
               Scooter is Locked
@@ -182,7 +182,7 @@ export default function RidePage() {
             </button>
           </div>
         ) : (
-          <div className="card glass" style={{ textAlign: "center", padding: "3rem 2rem" }}>
+          <div className="card glass" style={{ textAlign: "center", padding: "clamp(1.5rem, 5vw, 3rem) clamp(1rem, 4vw, 2rem)" }}>
             <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "1rem" }}>
               Ride Duration
             </div>

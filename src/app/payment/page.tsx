@@ -42,7 +42,7 @@ function PaymentBlock() {
   }
 
   return (
-    <div className="card glass" style={{ width: "100%", maxWidth: "450px", padding: "2.5rem 2rem" }}>
+    <div className="card glass" style={{ width: "100%", maxWidth: "450px", padding: "clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem)" }}>
       
       <div style={{ textAlign: "center", fontSize: "3rem", marginBottom: "1rem" }}>💳</div>
       <h2 style={{ textAlign: "center", fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>Complete Payment to Ride</h2>
@@ -78,7 +78,7 @@ function PaymentBlock() {
         <div style={{ marginBottom: "2rem", border: "1px dashed rgba(255,255,255,0.3)", padding: "1rem", borderRadius: "1rem", textAlign: "center" }}>
           {/* Mock QR Code Image */}
           <div style={{
-            width: "200px", height: "200px", 
+            width: "clamp(150px, 50vw, 200px)", height: "clamp(150px, 50vw, 200px)", 
             margin: "0 auto", 
             backgroundImage: `url('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=campusev@mitadt&pn=CampusEV&am=${totalCost}')`,
             backgroundSize: "contain",

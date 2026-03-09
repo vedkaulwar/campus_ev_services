@@ -173,22 +173,21 @@ export default function Home() {
         <section style={{ 
           position: "relative",
           width: "100%", 
-          height: "35vh", 
-          minHeight: "350px",
+          minHeight: "35vh",
           display: "flex", 
           flexDirection: "column",
           justifyContent: "center",
-          padding: "2rem 5%",
+          padding: "3rem 1rem",
           backgroundImage: "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url('/images/dashboard_hero.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           color: "white",
-          marginBottom: "3rem"
+          marginBottom: "2rem"
         }}>
-          <h1 style={{ fontSize: "3.5rem", fontWeight: 800, marginBottom: "1rem", textShadow: "0 4px 15px rgba(0,0,0,0.7)" }}>
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, marginBottom: "1rem", textShadow: "0 4px 15px rgba(0,0,0,0.7)" }}>
             Your Campus, Connected.
           </h1>
-          <p style={{ fontSize: "1.25rem", maxWidth: "650px", textShadow: "0 2px 10px rgba(0,0,0,0.6)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", maxWidth: "650px", textShadow: "0 2px 10px rgba(0,0,0,0.6)", lineHeight: 1.6 }}>
             Say goodbye to endless walking. Locate and instantly unlock a premium electric scooter from multiple points around MIT-ADT Kalbhor.
           </p>
         </section>
@@ -269,7 +268,7 @@ export default function Home() {
             backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
             padding: "1rem", zIndex: 100
           }}>
-            <div className="card glass" style={{ width: "100%", maxWidth: "450px", backgroundColor: "var(--surface)" }}>
+            <div className="card glass" style={{ width: "100%", maxWidth: "450px", backgroundColor: "var(--surface)", maxHeight: "90vh", overflowY: "auto" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
                 <h3 style={{ fontSize: "1.25rem", fontWeight: 700 }}>Select a Plan</h3>
                 <button 

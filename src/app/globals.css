@@ -290,3 +290,51 @@ input:focus {
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Mobile Responsiveness (v6) */
+@media (max-width: 768px) {
+  /* Header */
+  .app-header {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .user-profile {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 0.875rem;
+  }
+  
+  /* Containers */
+  .main-content {
+    padding: 1rem 0.5rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+  }
+
+  .auth-logo {
+    font-size: 1.5rem;
+  }
+
+  /* Typography Limits */
+  html {
+    font-size: 14px; /* Scaled down base rem for mobile screens */
+  }
+
+  /* Grid Stack */
+  .grid-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  /* Cards */
+  .card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+}
