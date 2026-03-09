@@ -29,6 +29,7 @@ export default function Home() {
   const [planLoading, setPlanLoading] = useState(false)
   const [planError, setPlanError] = useState("")
   const [hasPass, setHasPass] = useState(false)
+  const [passType, setPassType] = useState<string | null>(null)
   const [totalDues, setTotalDues] = useState(0)
   const [pastRides, setPastRides] = useState<any[]>([])
 
@@ -87,6 +88,8 @@ export default function Home() {
         const pastRidesData = await pastRidesRes.json()
 
         setHasPass(passData.hasPass)
+        if (passData.hasPass && passData.passType) setPassType(passData.passType)
+        
         if (duesData.totalDues) setTotalDues(duesData.totalDues)
         if (pastRidesData.pastRides) setPastRides(pastRidesData.pastRides)
       } catch (error) {
@@ -156,7 +159,18 @@ export default function Home() {
           ⚡ CampusEV
         </Link>
         <div className="user-profile" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span>Hi, {session.user?.name}</span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.2 }}>
+            <span>Hi, {session.user?.name}</span>
+            {hasPass ? (
+              <span style={{ fontSize: "0.7rem", color: "var(--success)", fontWeight: 700, textTransform: "uppercase" }}>
+                {passType} PASS ACTIVE
+              </span>
+            ) : (
+              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" }}>
+                NO ACTIVE PLAN
+              </span>
+            )}
+          </div>
           <ThemeToggle />
           <button 
             onClick={() => signOut()} 
