@@ -6,6 +6,12 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import ThemeToggle from "@/components/ThemeToggle"
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 export default function PassesPage() {
   const { status } = useSession()
   const router = useRouter()
@@ -25,19 +31,56 @@ export default function PassesPage() {
     setError("")
 
     try {
-      const res = await fetch("/api/passes/buy", {
+      const orderRes = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type })
+        body: JSON.stringify({ type: "PASS", id: type })
       })
+      const orderData = await orderRes.json()
+      if (!orderRes.ok) throw new Error(orderData.message)
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message)
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Campus EV Passes",
+        description: `${type} Campus Pass`,
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            setLoading(true)
+            const verifyRes = await fetch("/api/passes/buy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              })
+            })
+            const verifyData = await verifyRes.json()
+            if (!verifyRes.ok) throw new Error(verifyData.message)
+            setMessage(`Success! You have purchased a ${type} pass.`)
+          } catch(err: any) {
+            setError(err.message)
+          } finally {
+            setLoading(false)
+          }
+        },
+        theme: {
+          color: "#4f46e5"
+        }
+      }
 
-      setMessage(`Success! You have purchased a ${type} pass.`)
+      const rzp = new window.Razorpay(options)
+      rzp.on('payment.failed', function (response: any){
+        setError("Payment failed: " + response.error.description)
+        setLoading(false)
+      })
+      rzp.open()
     } catch (err: any) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }

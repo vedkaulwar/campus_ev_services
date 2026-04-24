@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/components/NextAuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <ThemeProvider>
           <NextAuthProvider>
             {children}
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
           </NextAuthProvider>
         </ThemeProvider>
       </body>

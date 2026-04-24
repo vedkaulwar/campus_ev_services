@@ -4,6 +4,12 @@ import { Suspense, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 function PaymentBlock() {
   const { status } = useSession()
   const router = useRouter()
@@ -25,16 +31,65 @@ function PaymentBlock() {
   const handlePayment = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/ride/pay-base", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rideId }),
-      })
-      const data = await res.json()
       
-      if (!res.ok) throw new Error(data.message)
-      
-      router.push("/ride")
+      if (Number(totalCost) > 0) {
+        // 1. Create order
+        const orderRes = await fetch("/api/razorpay/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "RIDE", id: rideId, amount: totalCost })
+        })
+        const orderData = await orderRes.json()
+        if (!orderRes.ok) throw new Error(orderData.message)
+
+        // 2. Open Razorpay
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: orderData.amount,
+          currency: "INR",
+          name: "Campus EV Rides",
+          description: "Base Fare & Dues",
+          order_id: orderData.orderId,
+          handler: async function (response: any) {
+            try {
+              setLoading(true)
+              const verifyRes = await fetch("/api/ride/pay-base", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                  rideId, 
+                  amount: totalCost,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                }),
+              })
+              const verifyData = await verifyRes.json()
+              if (!verifyRes.ok) throw new Error(verifyData.message)
+              router.push("/ride")
+            } catch(err: any) {
+              setError(err.message)
+              setLoading(false)
+            }
+          },
+          theme: { color: "#4f46e5" }
+        }
+        const rzp = new window.Razorpay(options)
+        rzp.on('payment.failed', function (response: any){
+          setError("Payment failed: " + response.error.description)
+          setLoading(false)
+        })
+        rzp.open()
+      } else {
+        const res = await fetch("/api/ride/pay-base", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rideId, amount: 0 }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message)
+        router.push("/ride")
+      }
     } catch (err: any) {
       setError(err.message)
       setLoading(false)
@@ -74,19 +129,7 @@ function PaymentBlock() {
         </div>
       )}
 
-      {Number(totalCost) > 0 ? (
-        <div style={{ marginBottom: "2rem", border: "1px dashed rgba(255,255,255,0.3)", padding: "1rem", borderRadius: "1rem", textAlign: "center" }}>
-          {/* Mock QR Code Image */}
-          <div style={{
-            width: "clamp(150px, 50vw, 200px)", height: "clamp(150px, 50vw, 200px)", 
-            margin: "0 auto", 
-            backgroundImage: `url('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=campusev@mitadt&pn=CampusEV&am=${totalCost}')`,
-            backgroundSize: "contain",
-            backgroundColor: "white", padding: "0.5rem", borderRadius: "0.5rem"
-          }}></div>
-          <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "1rem" }}>Scan QR to Pay with any UPI app</p>
-        </div>
-      ) : (
+      {Number(totalCost) === 0 && (
         <div style={{ marginBottom: "2rem", padding: "1.5rem", background: "rgba(16, 185, 129, 0.1)", color: "#10b981", borderRadius: "1rem", fontWeight: "bold", textAlign: "center" }}>
           ✨ Fully Covered by Active Pass! ✨
         </div>
@@ -98,10 +141,11 @@ function PaymentBlock() {
         disabled={loading}
         style={{ width: "100%", fontSize: "1.1rem" }}
       >
-        {loading ? "Processing..." : (Number(totalCost) > 0 ? "I have paid, Start Ride" : "Start Ride")}
+        {loading ? "Processing..." : (Number(totalCost) > 0 ? "Pay with Razorpay" : "Start Ride")}
       </button>
     </div>
   )
+
 }
 
 export default function PaymentPage() {

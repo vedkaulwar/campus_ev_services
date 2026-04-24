@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/firebase-admin"
+import { verifyRazorpaySignature } from "@/lib/razorpay"
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,15 @@ export async function POST(req: Request) {
 
     // @ts-ignore
     const userId = session.user.id
-    const { rideId } = await req.json()
+    const payload = await req.json()
+    const { rideId, amount, razorpay_order_id, razorpay_payment_id, razorpay_signature } = payload
+
+    // If amount > 0, we must have valid razorpay details
+    if (Number(amount) > 0) {
+      if (!verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+        return NextResponse.json({ message: "Payment verification failed" }, { status: 400 })
+      }
+    }
 
     if (!rideId) {
       return NextResponse.json({ message: "Ride ID is required" }, { status: 400 })
